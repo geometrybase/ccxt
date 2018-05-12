@@ -38,6 +38,10 @@ __all__ = [
     'BaseExchange',
     'Exchange',
 ]
+proxies = {
+    'http':'socks5h://192.168.1.9:12348',
+    'https':'socks5h://192.168.1.9:12348'
+}
 
 # -----------------------------------------------------------------------------
 
@@ -145,6 +149,7 @@ class Exchange(BaseExchange):
             self.raise_error(ExchangeError, url, method, e, None)
 
         self.handle_errors(http_status_code, text, url, method, self.last_response_headers, text)
+        self.logger.info('FETCHED {}'.format(url))
         return self.handle_rest_response(text, url, method, headers, body)
 
     async def load_markets(self, reload=False):

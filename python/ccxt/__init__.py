@@ -25,6 +25,9 @@
 __version__ = '1.13.83'
 
 # ----------------------------------------------------------------------------
+import logging
+import os
+logging.basicConfig(level=int(os.environ.get('CCXT_LOG_LEVEL', logging.INFO)))
 
 from ccxt.base.exchange import Exchange                     # noqa: F401
 

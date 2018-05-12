@@ -111,7 +111,10 @@ class Exchange(object):
     parseJsonResponse = True
     proxy = ''
     origin = '*'  # CORS origin
-    proxies = None
+    proxies = {
+        'http':'socks5h://192.168.1.9:12348',
+        'https':'socks5h://192.168.1.9:12348'
+    }
     apiKey = ''
     secret = ''
     password = ''

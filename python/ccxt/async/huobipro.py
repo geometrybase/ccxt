@@ -36,7 +36,7 @@ class huobipro (Exchange):
             'has': {
                 'CORS': False,
                 'fetchDepositAddress': True,
-                'fetchOHCLV': True,
+                'fetchOHLCV': True,
                 'fetchOpenOrders': True,
                 'fetchClosedOrders': True,
                 'fetchOrder': True,
