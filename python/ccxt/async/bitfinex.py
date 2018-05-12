@@ -264,6 +264,7 @@ class bitfinex (Exchange):
                 'BCU': 'CST_BCU',
                 'DAT': 'DATA',
                 'DSH': 'DASH',  # Bitfinex names Dash as DSH, instead of DASH
+                'IOS': 'IOST',
                 'IOT': 'IOTA',
                 'MNA': 'MANA',
                 'QSH': 'QASH',
@@ -645,10 +646,10 @@ class bitfinex (Exchange):
             ohlcv[5],
         ]
 
-    async def fetch_ohlcv(self, symbol, timeframe='1m', since=None, limit=100, params={}):
+    async def fetch_ohlcv(self, symbol, timeframe='1m', since=None, limit=None, params={}):
         await self.load_markets()
-        if since is None:
-            since = self.milliseconds() - self.parse_timeframe(timeframe) * limit * 1000
+        if limit is None:
+            limit = 100
         market = self.market(symbol)
         v2id = 't' + market['id']
         request = {
@@ -656,49 +657,70 @@ class bitfinex (Exchange):
             'timeframe': self.timeframes[timeframe],
             'sort': 1,
             'limit': limit,
-            'start': since,
         }
+        if since is not None:
+            request['start'] = since
         response = await self.v2GetCandlesTradeTimeframeSymbolHist(self.extend(request, params))
         return self.parse_ohlcvs(response, market, timeframe, since, limit)
 
     def get_currency_name(self, currency):
         names = {
+            'AGI': 'agi',
             'AID': 'aid',
+            'AIO': 'aio',
+            'ANT': 'ant',
             'AVT': 'aventus',  # #1811
             'BAT': 'bat',
             'BCH': 'bcash',  # undocumented
+            'BCI': 'bci',
+            'BFT': 'bft',
             'BTC': 'bitcoin',
             'BTG': 'bgold',
+            'CFI': 'cfi',
+            'DAI': 'dai',
             'DASH': 'dash',
             'DATA': 'datacoin',
+            'DTH': 'dth',
             'EDO': 'eidoo',  # #1811
             'ELF': 'elf',
             'EOS': 'eos',
             'ETC': 'ethereumc',
             'ETH': 'ethereum',
+            'ETP': 'metaverse',
             'FUN': 'fun',
             'GNT': 'golem',
+            'IOST': 'ios',
             'IOTA': 'iota',
+            'LRC': 'lrc',
             'LTC': 'litecoin',
             'MANA': 'mna',
-            'NEO': 'neo',  # #1811
+            'MIT': 'mit',
+            'MTN': 'mtn',
+            'NEO': 'neo',
+            'ODE': 'ode',
             'OMG': 'omisego',
             'OMNI': 'mastercoin',
             'QASH': 'qash',
             'QTUM': 'qtum',  # #1811
             'RCN': 'rcn',
+            'RDN': 'rdn',
             'REP': 'rep',
+            'REQ': 'req',
             'RLC': 'rlc',
             'SAN': 'santiment',
             'SNGLS': 'sng',
             'SNT': 'status',
             'SPANK': 'spk',
+            'STJ': 'stj',
             'TNB': 'tnb',
             'TRX': 'trx',
             'USD': 'wire',
             'USDT': 'tetheruso',  # undocumented
+            'WAX': 'wax',
+            'XLM': 'xlm',
             'XMR': 'monero',
             'XRP': 'ripple',
+            'XVG': 'xvg',
             'YOYOW': 'yoyow',
             'ZEC': 'zcash',
             'ZRX': 'zrx',

@@ -15,6 +15,7 @@ import hashlib
 import math
 import json
 from ccxt.base.errors import ExchangeError
+from ccxt.base.errors import InsufficientFunds
 from ccxt.base.errors import InvalidOrder
 from ccxt.base.errors import OrderNotFound
 from ccxt.base.errors import ExchangeNotAvailable
@@ -124,6 +125,7 @@ class huobipro (Exchange):
                 },
             },
             'exceptions': {
+                'account-frozen-balance-insufficient-error': InsufficientFunds,  # {"status":"error","err-code":"account-frozen-balance-insufficient-error","err-msg":"trade account balance is not enough, left: `0.0027`","data":null}
                 'order-limitorder-amount-min-error': InvalidOrder,  # limit order amount error, min: `0.001`
                 'order-orderstate-error': OrderNotFound,  # canceling an already canceled order
                 'order-queryorder-invalid': OrderNotFound,  # querying a non-existent order
@@ -142,7 +144,7 @@ class huobipro (Exchange):
             keys = list(limits.keys())
             for i in range(0, len(keys)):
                 symbol = keys[i]
-                self.markets[symbol] = self.extend(self.markets[symbol], {
+                self.markets[symbol] = self.deep_extend(self.markets[symbol], {
                     'limits': limits[symbol],
                 })
         return self.markets
@@ -490,7 +492,7 @@ class huobipro (Exchange):
         response = await self.privateGetOrderOrders(self.extend({
             'symbol': market['id'],
             'states': states,
-        }))
+        }, params))
         return self.parse_orders(response['data'], market, since, limit)
 
     async def fetch_orders(self, symbol=None, since=None, limit=None, params={}):

@@ -19,6 +19,7 @@ from ccxt.base.errors import InsufficientFunds
 from ccxt.base.errors import InvalidOrder
 from ccxt.base.errors import OrderNotFound
 from ccxt.base.errors import DDoSProtection
+from ccxt.base.errors import ExchangeNotAvailable
 
 
 class liqui (Exchange):
@@ -166,7 +167,6 @@ class liqui (Exchange):
                 'quote': quote,
                 'active': active,
                 'taker': market['fee'] / 100,
-                'lot': amountLimits['min'],
                 'precision': precision,
                 'limits': limits,
                 'info': market,
@@ -682,6 +682,8 @@ class liqui (Exchange):
                     # in fact, we can use the same .exceptions with string-keys to save some loc here
                     if message == 'invalid api key':
                         raise AuthenticationError(feedback)
+                    elif message == 'invalid sign':
+                        raise AuthenticationError(feedback)
                     elif message == 'api key dont have trade permission':
                         raise AuthenticationError(feedback)
                     elif message.find('invalid parameter') >= 0:  # errorCode 0, returned on buy(symbol, 0, 0)
@@ -691,10 +693,10 @@ class liqui (Exchange):
                     elif message == 'Requests too often':
                         raise DDoSProtection(feedback)
                     elif message == 'not available':
-                        raise DDoSProtection(feedback)
+                        raise ExchangeNotAvailable(feedback)
                     elif message == 'data unavailable':
-                        raise DDoSProtection(feedback)
+                        raise ExchangeNotAvailable(feedback)
                     elif message == 'external service unavailable':
-                        raise DDoSProtection(feedback)
+                        raise ExchangeNotAvailable(feedback)
                     else:
                         raise ExchangeError(self.id + ' unknown "error" value: ' + self.json(response))

@@ -131,6 +131,7 @@ module.exports = class okcoinusd extends Exchange {
             'exceptions': {
                 '1009': OrderNotFound, // for spot markets, cancelling closed order
                 '1051': OrderNotFound, // for spot markets, cancelling "just closed" order
+                '1019': OrderNotFound, // order closed?
                 '20015': OrderNotFound, // for future markets
                 '1013': InvalidOrder, // no contract type (PR-1101)
                 '1027': InvalidOrder, // createLimitBuyOrder(symbol, 0, 0): Incorrect parameter may exceeded limits
@@ -176,6 +177,8 @@ module.exports = class okcoinusd extends Exchange {
             let minAmount = markets[i]['minTradeSize'];
             let minPrice = Math.pow (10, -precision['price']);
             let active = (markets[i]['online'] !== 0);
+            let baseNumericId = markets[i]['baseCurrency'];
+            let quoteNumericId = markets[i]['quoteCurrency'];
             let market = this.extend (this.fees['trading'], {
                 'id': id,
                 'symbol': symbol,
@@ -183,6 +186,8 @@ module.exports = class okcoinusd extends Exchange {
                 'quote': quote,
                 'baseId': baseId,
                 'quoteId': quoteId,
+                'baseNumericId': baseNumericId,
+                'quoteNumericId': quoteNumericId,
                 'info': markets[i],
                 'type': 'spot',
                 'spot': true,
@@ -465,6 +470,8 @@ module.exports = class okcoinusd extends Exchange {
             return 'open';
         if (status === 2)
             return 'closed';
+        if (status === 3)
+            return 'open';
         if (status === 4)
             return 'canceled';
         return status;
@@ -514,9 +521,12 @@ module.exports = class okcoinusd extends Exchange {
         let createDateField = this.getCreateDateField ();
         if (createDateField in order)
             timestamp = order[createDateField];
-        let amount = order['amount'];
-        let filled = order['deal_amount'];
+        let amount = this.safeFloat (order, 'amount');
+        let filled = this.safeFloat (order, 'deal_amount');
         let remaining = amount - filled;
+        if (type === 'market') {
+            remaining = 0;
+        }
         let average = this.safeFloat (order, 'avg_price');
         // https://github.com/ccxt/ccxt/issues/2452
         average = this.safeFloat (order, 'price_avg', average);

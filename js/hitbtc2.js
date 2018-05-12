@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 const hitbtc = require ('./hitbtc');
-const { ExchangeError, OrderNotFound, InsufficientFunds, InvalidOrder } = require ('./base/errors');
+const { ExchangeError, ExchangeNotAvailable, OrderNotFound, InsufficientFunds, InvalidOrder } = require ('./base/errors');
 
 // ---------------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ module.exports = class hitbtc2 extends hitbtc {
             'urls': {
                 'logo': 'https://user-images.githubusercontent.com/1294454/27766555-8eaec20e-5edc-11e7-9c5b-6dc69fc42f5e.jpg',
                 'api': 'https://api.hitbtc.com',
-                'www': 'https://hitbtc.com',
+                'www': 'https://hitbtc.com/?ref_id=5a5d39a65d466',
                 'doc': 'https://api.hitbtc.com',
                 'fees': [
                     'https://hitbtc.com/fees-and-limits',
@@ -1113,7 +1113,13 @@ module.exports = class hitbtc2 extends hitbtc {
     }
 
     handleErrors (code, reason, url, method, headers, body) {
-        if (code === 400) {
+        if (typeof body !== 'string')
+            return;
+        if (code >= 400) {
+            const feedback = this.id + ' ' + body;
+            // {"code":504,"message":"Gateway Timeout","description":""}
+            if ((code === 503) || (code === 504))
+                throw new ExchangeNotAvailable (feedback);
             if (body[0] === '{') {
                 let response = JSON.parse (body);
                 if ('error' in response) {
@@ -1122,16 +1128,16 @@ module.exports = class hitbtc2 extends hitbtc {
                         if (message === 'Order not found') {
                             throw new OrderNotFound (this.id + ' order not found in active orders');
                         } else if (message === 'Quantity not a valid number') {
-                            throw new InvalidOrder (this.id + ' ' + body);
+                            throw new InvalidOrder (feedback);
                         } else if (message === 'Insufficient funds') {
-                            throw new InsufficientFunds (this.id + ' ' + body);
+                            throw new InsufficientFunds (feedback);
                         } else if (message === 'Duplicate clientOrderId') {
-                            throw new InvalidOrder (this.id + ' ' + body);
+                            throw new InvalidOrder (feedback);
                         }
                     }
                 }
             }
-            throw new ExchangeError (this.id + ' ' + body);
+            throw new ExchangeError (feedback);
         }
     }
 };

@@ -156,7 +156,6 @@ class liqui extends Exchange {
                 'quote' => $quote,
                 'active' => $active,
                 'taker' => $market['fee'] / 100,
-                'lot' => $amountLimits['min'],
                 'precision' => $precision,
                 'limits' => $limits,
                 'info' => $market,
@@ -647,7 +646,7 @@ class liqui extends Exchange {
                 'nonce' => $nonce,
                 'method' => $path,
             ), $query));
-            $signature = $this->sign_body_with_secret ($body);
+            $signature = $this->sign_body_with_secret($body);
             $headers = array (
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'Key' => $this->apiKey,
@@ -729,6 +728,8 @@ class liqui extends Exchange {
                     // in fact, we can use the same .exceptions with string-keys to save some loc here
                     if ($message === 'invalid api key') {
                         throw new AuthenticationError ($feedback);
+                    } else if ($message === 'invalid sign') {
+                        throw new AuthenticationError ($feedback);
                     } else if ($message === 'api key dont have trade permission') {
                         throw new AuthenticationError ($feedback);
                     } else if (mb_strpos ($message, 'invalid parameter') !== false) { // errorCode 0, returned on buy(symbol, 0, 0)
@@ -738,11 +739,11 @@ class liqui extends Exchange {
                     } else if ($message === 'Requests too often') {
                         throw new DDoSProtection ($feedback);
                     } else if ($message === 'not available') {
-                        throw new DDoSProtection ($feedback);
+                        throw new ExchangeNotAvailable ($feedback);
                     } else if ($message === 'data unavailable') {
-                        throw new DDoSProtection ($feedback);
+                        throw new ExchangeNotAvailable ($feedback);
                     } else if ($message === 'external service unavailable') {
-                        throw new DDoSProtection ($feedback);
+                        throw new ExchangeNotAvailable ($feedback);
                     } else {
                         throw new ExchangeError ($this->id . ' unknown "error" value => ' . $this->json ($response));
                     }

@@ -3,7 +3,7 @@
 //  ---------------------------------------------------------------------------
 
 const Exchange = require ('./base/Exchange');
-const { ExchangeError, InsufficientFunds, OrderNotFound, InvalidOrder, DDoSProtection, InvalidNonce, AuthenticationError } = require ('./base/errors');
+const { ExchangeError, ExchangeNotAvailable, InsufficientFunds, OrderNotFound, InvalidOrder, DDoSProtection, InvalidNonce, AuthenticationError } = require ('./base/errors');
 
 //  ---------------------------------------------------------------------------
 
@@ -256,6 +256,7 @@ module.exports = class binance extends Exchange {
             },
             // exchange-specific options
             'options': {
+                'defaultLimitOrderType': 'limit', // or 'limit_maker'
                 'hasAlreadyAuthenticatedSuccessfully': false,
                 'warnOnFetchOpenOrdersWithoutSymbol': true,
                 'recvWindow': 5 * 1000, // 5 sec, binance default
@@ -263,6 +264,7 @@ module.exports = class binance extends Exchange {
                 'adjustForTimeDifference': false, // controls the adjustment logic upon instantiation
             },
             'exceptions': {
+                '-1000': ExchangeNotAvailable, // {"code":-1000,"msg":"An unknown error occured while processing the request."}
                 '-1013': InvalidOrder, // createOrder -> 'invalid quantity'/'invalid price'/MIN_NOTIONAL
                 '-1021': InvalidNonce, // 'your time is ahead of server'
                 '-1100': InvalidOrder, // createOrder(symbol, 1, asdf) -> 'Illegal characters found in parameter 'price'
@@ -643,10 +645,13 @@ module.exports = class binance extends Exchange {
             'side': side.toUpperCase (),
         };
         if (type === 'limit') {
+            order['type'] = this.options['defaultLimitOrderType'].toUpperCase ();
             order = this.extend (order, {
                 'price': this.priceToPrecision (symbol, price),
                 'timeInForce': 'GTC', // 'GTC' = Good To Cancel (default), 'IOC' = Immediate Or Cancel
             });
+        } else if (type === 'limit_maker') {
+            order['price'] = this.priceToPrecision (symbol, price);
         }
         let response = await this[method] (this.extend (order, params));
         return this.parseOrder (response);

@@ -1,7 +1,7 @@
 'use strict';
 
 const Exchange = require ('./base/Exchange');
-const { ExchangeError, InsufficientFunds, OrderNotFound, DDoSProtection, InvalidOrder, AuthenticationError } = require ('./base/errors');
+const { ExchangeError, ExchangeNotAvailable, InsufficientFunds, OrderNotFound, DDoSProtection, InvalidOrder, AuthenticationError } = require ('./base/errors');
 
 module.exports = class liqui extends Exchange {
     describe () {
@@ -151,7 +151,6 @@ module.exports = class liqui extends Exchange {
                 'quote': quote,
                 'active': active,
                 'taker': market['fee'] / 100,
-                'lot': amountLimits['min'],
                 'precision': precision,
                 'limits': limits,
                 'info': market,
@@ -724,6 +723,8 @@ module.exports = class liqui extends Exchange {
                     // in fact, we can use the same .exceptions with string-keys to save some loc here
                     if (message === 'invalid api key') {
                         throw new AuthenticationError (feedback);
+                    } else if (message === 'invalid sign') {
+                        throw new AuthenticationError (feedback);
                     } else if (message === 'api key dont have trade permission') {
                         throw new AuthenticationError (feedback);
                     } else if (message.indexOf ('invalid parameter') >= 0) { // errorCode 0, returned on buy(symbol, 0, 0)
@@ -733,11 +734,11 @@ module.exports = class liqui extends Exchange {
                     } else if (message === 'Requests too often') {
                         throw new DDoSProtection (feedback);
                     } else if (message === 'not available') {
-                        throw new DDoSProtection (feedback);
+                        throw new ExchangeNotAvailable (feedback);
                     } else if (message === 'data unavailable') {
-                        throw new DDoSProtection (feedback);
+                        throw new ExchangeNotAvailable (feedback);
                     } else if (message === 'external service unavailable') {
-                        throw new DDoSProtection (feedback);
+                        throw new ExchangeNotAvailable (feedback);
                     } else {
                         throw new ExchangeError (this.id + ' unknown "error" value: ' + this.json (response));
                     }

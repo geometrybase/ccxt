@@ -4,7 +4,7 @@
 
 # -----------------------------------------------------------------------------
 
-__version__ = '1.13.83'
+__version__ = '1.13.134'
 
 # -----------------------------------------------------------------------------
 
@@ -858,11 +858,23 @@ class Exchange(object):
         else:
             base_currencies = [{
                 'id': market['baseId'] if 'baseId' in market else market['base'],
+                'numericId': market['baseNumericId'] if 'baseNumericId' in market else None,
                 'code': market['base'],
+                'precision': (
+                    market['precision']['base'] if 'base' in market['precision'] else (
+                        market['precision']['amount'] if 'amount' in market['precision'] else None
+                    )
+                ) if 'precision' in market else 8,
             } for market in values if 'base' in market]
             quote_currencies = [{
                 'id': market['quoteId'] if 'quoteId' in market else market['quote'],
+                'numericId': market['quoteNumericId'] if 'quoteNumericId' in market else None,
                 'code': market['quote'],
+                'precision': (
+                    market['precision']['quote'] if 'quote' in market['precision'] else (
+                        market['precision']['price'] if 'price' in market['precision'] else None
+                    )
+                ) if 'precision' in market else 8,
             } for market in values if 'quote' in market]
             currencies = self.sort_by(base_currencies + quote_currencies, 'code')
             self.currencies = self.deep_extend(self.index_by(currencies, 'code'), self.currencies)
